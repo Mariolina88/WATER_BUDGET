@@ -16,8 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package rootZone;
-
+package runoff_concentrationTime;
 
 import org.apache.commons.math3.exception.DimensionMismatchException;
 import org.apache.commons.math3.exception.MaxCountExceededException;
@@ -25,30 +24,36 @@ import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 
 // TODO: Auto-generated Javadoc
 /**
- * The Class  implements the FirstOrderDifferentialEquations interface
+ * The Class FirstLayer implements the FirstOrderDifferentialEquations interface
  * and solves the water budget equation.
  * @author Marialaura Bancheri
  */
 public class waterBudgetODE implements FirstOrderDifferentialEquations{
 
-	public double actualInput;
-
-	public double ETp;
+	public double c;
 	
-	public double s_RootZoneMax;
+	public double d;
+
+	public double recharge;
 	
-	public double a;
+	public double Smax;
+
 	
-	public double b;
+	
 
 
 
-	public waterBudgetODE (double actualInput,double s_RootZoneMax, double a,double b, double ETp) {
-		this.actualInput=actualInput;
-		this.ETp=ETp;
-		this.s_RootZoneMax=s_RootZoneMax;
-		this.a=a;
-		this.b=b;
+	/**
+	 * Instantiates the first layer parameters .
+	 *
+	 * @param recharge: input recharge value
+	 * @param Qmod: the modeled input discharge
+	 */
+	public waterBudgetODE(double recharge, double c, double d, double Smax) {
+		this.c=c;
+		this.d=d;
+		this.recharge=recharge;
+		this.Smax=Smax;
 
 	}
 	
@@ -64,8 +69,9 @@ public class waterBudgetODE implements FirstOrderDifferentialEquations{
 	 */
 	public void computeDerivatives(double t, double[] y, double[] yDot)
 			throws MaxCountExceededException, DimensionMismatchException {
-		yDot[0] =actualInput-Math.max(0, (ETp*Math.min(1,1.33*(y[0]/s_RootZoneMax))))-a*Math.pow(y[0]/s_RootZoneMax, b);
+		yDot[0] =recharge-c*Math.pow(y[0]/Smax, d);
 		
+
 	
 	}
 

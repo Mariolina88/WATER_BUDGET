@@ -22,7 +22,6 @@ package damModelling;
 import static org.jgrasstools.gears.libs.modules.JGTConstants.isNovalue;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
@@ -33,15 +32,14 @@ import oms3.annotations.Out;
 
 import org.geotools.feature.SchemaException;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 
 import org.apache.commons.math3.ode.*;
 
 
 /**
- * The Class WaterBudget solves the water budget equation for the groudwater layer.
- * The input s the recharge from the root zone and the output is the discharge, 
- * modeled with a non linear reservoir model.
  * 
  * @author Marialaura Bancheri
  */
@@ -51,34 +49,39 @@ public class WaterBudgetDam{
 	@Description("Input recharge Hashmap")
 	@In
 	public HashMap<Integer, double[]> inHMRechargeValues;
-	
-/*	@Description("Input recharge Hashmap")
+
+	/*	@Description("Input recharge Hashmap")
 	@In
 	public HashMap<Integer, double[]> inHMPrecipValues;*/
 
 	@Description("Input CI Hashmap")
 	@In
 	public HashMap<Integer, double[]>initialConditionS_i;
-	
-	@Description("Input dam trasfers Hashmap ")
-	@In
-	public HashMap<Integer, double[]> inHMerogazioni;
 
-	
+
+	@Description("Path to the input dam trasfers file")
+	@In
+	public String inHMerogazioni;
+
+	@Description("Current date")
+	@In
+	public String tCurrent;
+
+
 	@Description("Dam stage CI")
 	@In
 	public double h_CI;
-	
+
 	@Description("Stage of spillway activation")
 	@In
 	public double h_sfioro;
-	
 
-	
+
+
 	@Description("Spillway equation coefficient")
 	@In
 	public double mu;
-	
+
 	@Description("Spillway length")
 	@In
 	public double l;
@@ -87,11 +90,11 @@ public class WaterBudgetDam{
 	@Description("Coefficient of the linear equation beteween the dam stage and the surface area")
 	@In
 	public double a_surface;	
-	
+
 	@Description("Known term of the linear equation beteween the dam stage and the surface area")
 	@In
 	public double b_surface;
-	
+
 
 	@Description("ODE solver model: dp853, Eulero ")
 	@In
@@ -103,20 +106,35 @@ public class WaterBudgetDam{
 
 	@Description("The output HashMap with the total discharge (trasfer+spillway) ")
 	@Out
-	public HashMap<Integer, double[]> outHMDischarge ;
-	
+	public HashMap<Integer, double[]> outHMDischarge=new HashMap<Integer, double[]>()  ;
+
 	@Description("The output HashMap with the spillway discharge")
 	@Out
-	public HashMap<Integer, double[]> outHMSfiori ;
-
+	public HashMap<Integer, double[]> outHMSfiori=new HashMap<Integer, double[]>() ; 
+	
 	@Description("The output HashMap with the surface area")
 	@Out
-	public HashMap<Integer, double[]> outHMSurface;
-
+	public HashMap<Integer, double[]> outHMSurface=new HashMap<Integer, double[]>() ;
+		
+	@Description("Required Hashmap for computation")
+	@Out
+	public HashMap<Integer, double[]> outHMStorageC=new HashMap<Integer, double[]>() ;
 	
+	@Description("Required Hashmap for computation")
+	@Out
+	public HashMap<Integer, double[]> outHMStorageRO=new HashMap<Integer, double[]>() ;
+	
+	@Description("Required Hashmap for computation")
+	@Out
+	public HashMap<Integer, double[]> outHMStorageGW=new HashMap<Integer, double[]>() ;
+	
+
 	int step;
 
 	double CI;
+
+	String line = "";
+	String cvsSplitBy = ",";
 
 
 	/**
@@ -129,10 +147,9 @@ public class WaterBudgetDam{
 	public void process() throws Exception {
 		//checkNull(inHMRechargeValues);
 
-		outHMSurface= new HashMap<Integer, double[]>() ;
-		outHMDischarge= new HashMap<Integer, double[]>() ;
-		outHMSfiori= new HashMap<Integer, double[]>() ;
-		
+		BufferedReader br = null;
+
+
 		// reading the ID of all the stations 
 		Set<Entry<Integer, double[]>> entrySet = inHMRechargeValues.entrySet();
 
@@ -151,32 +168,63 @@ public class WaterBudgetDam{
 				}else{
 					CI=h_CI;
 				}
-				System.out.println("XXXXXXXXXXXXXXXXXXXXX"+CI);
+				System.out.println("Initial water level DAM "+CI);
 			}
 
-					
-			
-			
+
+
+
 			/**Input data reading*/
 			double recharge = inHMRechargeValues.get(ID)[0];
 			if (isNovalue(recharge)) recharge= 0;
-			
-			/**Input data reading*/
-			double erogazioni = inHMerogazioni.get(ID)[0];
-			if (isNovalue(erogazioni)) erogazioni= 0;
-			
-/*			double precip = inHMPrecipValues.get(ID)[0];
+
+
+
+			String first = "";
+			String date= "";
+			String month= "";
+			double erogazioni=0;
+
+			br = new BufferedReader(new FileReader(inHMerogazioni));	
+			while ((line = br.readLine()) != null) {
+
+				first = line.toString();
+
+				if(first.startsWith(",")){
+
+					// use comma as separator
+					date = line.toString().split(",")[1];
+					month=date.split("-")[1];
+
+					if(month.equals(tCurrent.split("-")[1])){
+						erogazioni=Double.valueOf(line.toString().split(",")[2]);
+						
+						//System.out.println("mese"+month+"-"+erogazioni+"t current"+tCurrent);
+						break;
+					}
+
+				}
+
+
+			}
+
+
+
+
+
+
+			/*			double precip = inHMPrecipValues.get(ID)[0];
 			if (isNovalue(precip)) recharge= 0;*/
-			
+
 			//precip=precip/1000*A*Math.pow(10, 6)/(60*timeStep);
-			
+
 			double precip=0;
 
 			double level=computeS(recharge,CI,precip,erogazioni,l);
 			double surface=computeSurface(level);
 			double Q_sfioro=computeQ(level);
 			double discharge=Q_sfioro+erogazioni;
-	
+
 
 			/** Save the result in  hashmaps for each station*/
 			storeResult_series(ID,level,discharge,Q_sfioro,surface);
@@ -185,7 +233,7 @@ public class WaterBudgetDam{
 
 		}
 
-
+		br.close();
 		step++;
 
 	}
@@ -206,7 +254,6 @@ public class WaterBudgetDam{
 
 		/** result of the resolution of the ODE*/
 		h_i=solver.integrateValues();
-
 
 		return h_i;
 	}
@@ -232,6 +279,9 @@ public class WaterBudgetDam{
 		outHMDischarge.put(ID, new double[]{discharge});
 		outHMSfiori.put(ID, new double[]{Q_sfioro});
 		outHMSurface.put(ID, new double[]{surface});
+		outHMStorageC.put(ID, new double[]{-9999});
+		outHMStorageRO.put(ID, new double[]{-9999});
+		outHMStorageGW.put(ID, new double[]{-9999});
 
 
 	}

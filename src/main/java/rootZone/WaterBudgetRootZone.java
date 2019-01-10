@@ -67,17 +67,21 @@ public class WaterBudgetRootZone{
 	@In
 	public double pCmax;
 
-	@Description("Maximum percolation rate")
+	@Description("Coefficient of the non-reservoir")
 	@In
-	public double Pmax;
+	public double a;
 
 	@Description("Exponential of non-linear reservoir")
 	@In
-	public double b_rz;
+	public double b;
 
 	@Description("Degree of spatial variability of the soil moisture capacity")
 	@In
-	public Double pB;
+	public Double pB_soil;
+	
+	@Description("Initial saturation_degree")
+	@In
+	public Double sat_degree=0.6;
 
 
 	@Description("partitioning coefficient between the root zone and the runoff reservoirs")
@@ -134,7 +138,7 @@ public class WaterBudgetRootZone{
 	@Out
 	public HashMap<Integer, double[]> outHMquick= new HashMap<Integer, double[]>() ;
 
-	@Description("The output HashMap with the quick outflow ")
+	@Description("The output HashMap with the quick outflow in millimeter")
 	@Out
 	public HashMap<Integer, double[]> outHMquick_mm= new HashMap<Integer, double[]>() ;
 
@@ -155,7 +159,6 @@ public class WaterBudgetRootZone{
 	 */
 	@Execute
 	public void process() throws Exception {
-		//checkNull(inHMRain);
 
 
 		// reading the ID of all the stations 
@@ -169,14 +172,14 @@ public class WaterBudgetRootZone{
 			Integer ID = entry.getKey();
 
 			if(step==0){
-				System.out.println("RZ--Pmax:"+Pmax+"-brz:"+b_rz+"-Smax:"+s_RootZoneMax+"-pB:"+pB);
+				System.out.println("RZ--a:"+a+"-b:"+b+"-Smax:"+s_RootZoneMax+"-pB_soil:"+pB_soil);
 
 				if(initialConditionS_i!=null){
 					CI=initialConditionS_i.get(ID)[0];	
-					if (isNovalue(CI)) CI= s_RootZoneMax*0.7;	
+					if (isNovalue(CI)) CI= s_RootZoneMax*sat_degree;	
 					
 				}else{
-					CI=s_RootZoneMax*0.7;
+					CI=s_RootZoneMax*sat_degree;
 				}
 			}
 
@@ -244,16 +247,16 @@ public class WaterBudgetRootZone{
 	 */
 
 	private double alpha( double S_i, double Pval, double S_max) {
-		double pCmax=S_max *(pB+1);
-		double coeff1 = 1.0 - ((pB + 1.0) * (S_i) / pCmax);
-		double exp = 1.0 / (pB + 1.0);
+		double pCmax=S_max *(pB_soil+1);
+		double coeff1 = 1.0 - ((pB_soil + 1.0) * (S_i) / pCmax);
+		double exp = 1.0 / (pB_soil + 1.0);
 		double ct_prev = pCmax * (1.0 - Math.pow(coeff1, exp));
 		double UT1 = Math.max((Pval - pCmax + ct_prev), 0.0);
 		//Pval = Pval - UT1;
 		double dummy = Math.min(((ct_prev + Pval- UT1) / pCmax), 1.0);
 		double coeff2 = (1.0 - dummy);
-		double exp2 = (pB + 1.0);
-		double xn = (pCmax / (pB + 1.0)) * (1.0 - (Math.pow(coeff2, exp2)));
+		double exp2 = (pB_soil + 1.0);
+		double xn = (pCmax / (pB_soil + 1.0)) * (1.0 - (Math.pow(coeff2, exp2)));
 		double UT2 = Math.max(Pval- UT1 - (xn - S_i), 0);
 		alpha=(UT1+UT2)/Pval;
 		if (isNovalue(alpha)) alpha= 1;
@@ -278,7 +281,7 @@ public class WaterBudgetRootZone{
 
 
 		/** Creation of the differential equation*/
-		FirstOrderDifferentialEquations ode=new waterBudgetODE(actualInput,s_RootZoneMax,Pmax,b_rz,ETp);			
+		FirstOrderDifferentialEquations ode=new waterBudgetODE(actualInput,s_RootZoneMax,a,b,ETp);			
 
 		/** Boundaries conditions*/
 		double[] y = new double[] { S_i, s_RootZoneMax };
@@ -310,7 +313,7 @@ public class WaterBudgetRootZone{
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public double computeR(double S_i) throws IOException {
-		double Rg=Pmax*Math.pow(S_i/s_RootZoneMax, b_rz);
+		double Rg=a*Math.pow(S_i/s_RootZoneMax, b);
 		return Rg;
 	}
 
@@ -318,28 +321,18 @@ public class WaterBudgetRootZone{
 	/**
 	 * Compute the AET
 	 * @param S_i: the actual storage value
-	 * @param ETinput: the input potential ET
+	 * @param ETp: the input potential ET
 	 * @return the double value of the AET
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public double computeAET(double S_i, double ETp) throws IOException {
-		double Emod=Math.max(0, (ETp*Math.min(1,1.33*S_i/s_RootZoneMax)));
-		return Emod;
+		double AET=Math.max(0, (ETp*Math.min(1,1.33*S_i/s_RootZoneMax)));
+		return AET;
 	}
 
 
 
 
-	/**
-	 * Store of the results in hashmaps 
-	 *
-	 * @param waterStorage is the water storage
-	 * @param uptake is the uptake
-	 * @param evapotranspiration is the evapotranspiration
-	 * @param totalInputFluxes are the input of the layer after the partition
-	 * @param drainage is drainage toward the lower layer
-	 * @throws SchemaException the schema exception
-	 */
 
 	private void storeResult_series(int ID, double actualInput, double waterStorage,
 			double evapotranspiration,double drainage, double quick, double quick_mm) throws SchemaException {

@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package groundWater;
+package runoff;
 
 import static org.jgrasstools.gears.libs.modules.JGTConstants.isNovalue;
 
@@ -44,7 +44,7 @@ import org.apache.commons.math3.ode.*;
  * 
  * @author Marialaura Bancheri
  */
-public class WaterBudgetGroundWater{
+public class WaterBudget{
 
 
 	@Description("Input recharge Hashmap")
@@ -63,26 +63,27 @@ public class WaterBudgetGroundWater{
 
 	@Description("Coefficient of the non-linear Reservoir model ")
 	@In
-	public double e ;
+	public double c ;
 
 
 	@Description("Exponent of non-linear reservoir")
 	@In
-	public double f;
+	public double d;
 
 	@Description("The area of the HRUs in km2")
 	@In
 	public double A;
 
-	@Description("Maximum storage of the reservoir")
+	@Description("Smax")
 	@In
-	public double s_GroundWaterMax;
+	public double s_RootZoneMax=10;
 
 
 	@Description("ODE solver model: dp853, Eulero ")
 	@In
 	public String solver_model;
 
+	
 	@Description("The output HashMap with the Water Storage")
 	@Out
 	public HashMap<Integer, double[]> outHMStorage= new HashMap<Integer, double[]>() ;
@@ -115,18 +116,19 @@ public class WaterBudgetGroundWater{
 		Set<Entry<Integer, double[]>> entrySet = inHMRechargeValues.entrySet();
 
 
+
 		// iterate over the station
 		for( Entry<Integer, double[]> entry : entrySet ) {
 			Integer ID = entry.getKey();
 
 			if(step==0){
-				System.out.println("GW--e:"+e+"-f:"+f+"-Smax:"+s_GroundWaterMax);
+				System.out.println("RO--c:"+c+"-d:"+d+"-s_GroundWaterMax:"+s_RootZoneMax);
 
 				if(initialConditionS_i!=null){
 					CI=initialConditionS_i.get(ID)[0];
-					if (isNovalue(CI)) CI= s_GroundWaterMax*0.5;
+					if (isNovalue(CI)) CI= 0;					
 				}else{
-					CI=s_GroundWaterMax*0.5;
+					CI=0;
 				}
 			}
 
@@ -136,8 +138,8 @@ public class WaterBudgetGroundWater{
 			if(step==0&recharge==0)recharge= 1;
 
 
-			double waterStorage=computeS(recharge,CI);
-			double discharge_mm=computeQ(waterStorage);
+			double waterStorage=computeS(recharge,CI,c);
+			double discharge_mm=computeQ(waterStorage,c);
 
 			double discharge=discharge_mm/1000*A*Math.pow(10, 6)/(60*timeStep);		
 
@@ -145,6 +147,7 @@ public class WaterBudgetGroundWater{
 			storeResult_series(ID,waterStorage,discharge,discharge_mm);
 
 			CI=waterStorage;
+
 		}
 
 
@@ -160,14 +163,15 @@ public class WaterBudgetGroundWater{
 	 * @return the water storage, according to the model and the layer
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public double computeS(double recharge, double S_i) throws IOException {
+	public double computeS(double recharge, double S_i,double c) throws IOException {
 
 
+		
 		/** Creation of the differential equation*/
-		FirstOrderDifferentialEquations ode=new waterBudgetODE(recharge,e,f, s_GroundWaterMax);			
+		FirstOrderDifferentialEquations ode=new waterBudgetODE(recharge,c,d,s_RootZoneMax);			
 
 		/** Boundaries conditions*/
-		double[] y = new double[] { S_i, s_GroundWaterMax };
+		double[] y = new double[] { S_i, s_RootZoneMax };
 
 		/** Choice of the ODE solver */	
 		SolverODE solver;
@@ -179,7 +183,7 @@ public class WaterBudgetGroundWater{
 		/** Check of the Storage values: they cannot be negative*/
 		if (S_i<0) S_i=0;
 
-		//if(S_i<0.01)System.out.println(S_i+"--gw"+a+"-"+b+"-"+Smax);
+		//System.out.println("ro"+c+"-"+d+"-"+s_GroundWaterMax);
 
 
 		return S_i;
@@ -192,8 +196,8 @@ public class WaterBudgetGroundWater{
 	 * @return the double value of the simulated discharge
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public double computeQ(double S_i) throws IOException {
-		double Q=e*Math.pow(S_i/s_GroundWaterMax, f);
+	public double computeQ(double S_i, double tau_ro) throws IOException {
+		double Q=c*Math.pow(S_i/s_RootZoneMax,d);
 		return Q;
 	}
 

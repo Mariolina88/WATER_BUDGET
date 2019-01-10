@@ -68,11 +68,12 @@ public class TestRootZone{
 
 			
 			waterBudget.s_RootZoneMax=4;
-			waterBudget.Pmax=0.000958;
-			waterBudget.b_rz=1.83;
-			waterBudget.pB=0.33;
+			waterBudget.a=0.000958;
+			waterBudget.b=1.83;
+			waterBudget.pB_soil=0.33;
 			waterBudget.inTimestep=60;
 			waterBudget.A=3.79;
+			//waterBudget.sat_degree=0.8;
 			
 
 			
@@ -81,9 +82,9 @@ public class TestRootZone{
 			HashMap<Integer, double[]> id2ValueMap = JReader.outData;
 			waterBudget.inHMRain = id2ValueMap;
 			
-            CIReader.nextRecord();
+            /**CIReader.nextRecord();
             id2ValueMap = CIReader.outData;
-            waterBudget.initialConditionS_i = id2ValueMap;
+            waterBudget.initialConditionS_i = id2ValueMap;*/
 			
 
             

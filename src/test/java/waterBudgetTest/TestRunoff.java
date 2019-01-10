@@ -4,104 +4,98 @@ package waterBudgetTest;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 
-import org.geotools.coverage.grid.GridCoverage2D;
-import org.jgrasstools.gears.io.rasterreader.OmsRasterReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.junit.Test;
 
+import runoff.WaterBudget;
 
-import runoff.WaterBudgetRunoff;
 
 public class TestRunoff{
 
 	@Test
 	public void testLinear() throws Exception {
 
-		String startDate = "1997-01-01 00:00";
-		String endDate = "1997-01-01 15:00";
+		String startDate = "1994-01-01 21:00";
+		String endDate = "1994-01-04 08:00";
 		int timeStepMinutes = 60;
 		String fId = "ID";
 
-		String inPathToPrec = "resources/Input/InputRO_1.csv";
-		String pathToQ= "resources/Output/runoff/Q_runoff.csv";
-		String pathToQmm= "resources/Output/runoff/Q_runoff_mm.csv";
-		
+		String inPathToPrec = "resources/Input/rainfall.csv";
+		//String inPathToCI ="resources/Input/S_gw.csv";
 
+		String pathToS= "resources/Output/runoff/S_ro.csv";
+		String pathToR= "resources/Output/runoff/Q_ro.csv";
 
 		
 		OmsTimeSeriesIteratorReader JReader = getTimeseriesReader(inPathToPrec, fId, startDate, endDate, timeStepMinutes);
+		//OmsTimeSeriesIteratorReader CIReader = getTimeseriesReader(inPathToCI, fId, startDate, startDate, timeStepMinutes);
+
+		OmsTimeSeriesIteratorWriter writerS = new OmsTimeSeriesIteratorWriter();
 
 		OmsTimeSeriesIteratorWriter writerQ = new OmsTimeSeriesIteratorWriter();
-		OmsTimeSeriesIteratorWriter writerQint = new OmsTimeSeriesIteratorWriter();
+
+
+		writerS.file = pathToS;
+		writerS.tStart = startDate;
+		writerS.tTimestep = timeStepMinutes;
+		writerS.fileNovalue="-9999";
+		
 
 		
-		writerQ.file = pathToQ;
+		writerQ.file = pathToR;
 		writerQ.tStart = startDate;
 		writerQ.tTimestep = timeStepMinutes;
 		writerQ.fileNovalue="-9999";
 		
-		
-		writerQint.file = pathToQmm;
-		writerQint.tStart = startDate;
-		writerQint.tTimestep = timeStepMinutes;
-		writerQint.fileNovalue="-9999";
-		
 
 		
-		WaterBudgetRunoff waterBudgetRunoff= new WaterBudgetRunoff();
-		
-		OmsRasterReader Wsup = new OmsRasterReader();
-		Wsup.file = "resources/Input/rescaled_1.asc";
-		Wsup.fileNovalue = -9999.0;
-		Wsup.geodataNovalue = Double.NaN;
-		Wsup.process();
-		GridCoverage2D width_sup = Wsup.outRaster;
-		
-		
-		OmsRasterReader topindex = new OmsRasterReader();
-		topindex.file = "resources/Input/top_1.asc";
-		topindex.fileNovalue = -9999.0;
-		topindex.geodataNovalue = Double.NaN;
-		topindex.process();
-		GridCoverage2D topIndex = topindex.outRaster;
+		WaterBudget waterBudget= new WaterBudget();
 
 
 		while( JReader.doProcess ) {
+		
+			waterBudget.solver_model="dp853";
+			waterBudget.c=0.39;
+			waterBudget.d=1;
+			waterBudget.timeStep=60;
+			waterBudget.A=5.2092;
+			waterBudget.s_RootZoneMax=1;
+			
 
-			waterBudgetRunoff.inRescaledDistance=width_sup;
-			waterBudgetRunoff.pCelerity=0.4;
-			waterBudgetRunoff.inTopindex=topIndex;
-			waterBudgetRunoff.pSat=20;
-			waterBudgetRunoff.inTimestep=timeStepMinutes;
-			waterBudgetRunoff.ID=1;
-			waterBudgetRunoff.alpha=1;
 			
 			JReader.nextRecord();
 			
 			HashMap<Integer, double[]> id2ValueMap = JReader.outData;
-			waterBudgetRunoff.inRainValues = id2ValueMap;
-
-			waterBudgetRunoff.process();
-            
-            HashMap<Integer, double[]> outHMDischarge = waterBudgetRunoff.outHMDischarge;
-            HashMap<Integer, double[]> outHMDischarge_mm = waterBudgetRunoff.outHMDischarge_mm;
-
+			waterBudget.inHMRechargeValues = id2ValueMap;
 			
-			writerQ.inData = outHMDischarge;
+            /**CIReader.nextRecord();
+            id2ValueMap = CIReader.outData;
+            waterBudget.initialConditionS_i = id2ValueMap;*/
+			
+
+
+            waterBudget.process();
+            
+            HashMap<Integer, double[]> outHMStorage = waterBudget.outHMStorage;
+            
+            HashMap<Integer, double[]> outHMQ= waterBudget.outHMDischarge;
+            
+			writerS.inData = outHMStorage ;
+			writerS.writeNextLine();
+			
+			if (pathToS != null) {
+				writerS.close();
+			}
+			
+		
+			writerQ.inData = outHMQ;
 			writerQ.writeNextLine();
 			
-			if (pathToQ != null) {
+			if (pathToR != null) {
 				writerQ.close();
 			}
-			
-			writerQint.inData = outHMDischarge_mm;
-			writerQint.writeNextLine();
-			
-			if (pathToQmm != null) {
-				writerQint.close();
-			}
-          
+            
 		}
 		JReader.close();
 

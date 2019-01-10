@@ -15,12 +15,11 @@ import oms3.annotations.Unit;
 
 
 import org.geotools.feature.SchemaException;
-import org.jgrasstools.gears.libs.modules.JGTModel;
 
 
 
 
-public class HydrometricStage extends JGTModel {
+public class HydrometricStage {
 
 	@Description("The Hashmap with the discharge values")
 	@In
@@ -71,7 +70,7 @@ public class HydrometricStage extends JGTModel {
 	@Execute
 	public void process() throws Exception { 
 
-		checkNull(inDischargeValues);
+
 
 		double stage;
 		double [] result=new double [2];

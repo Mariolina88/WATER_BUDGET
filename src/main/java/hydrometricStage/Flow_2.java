@@ -22,10 +22,6 @@ package hydrometricStage;
 import org.apache.commons.math3.analysis.solvers.BrentSolver;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.solvers.UnivariateSolver;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
-
 
 public class Flow_2 implements Model{
 
@@ -47,8 +43,7 @@ public class Flow_2 implements Model{
 
 	/** The value of zero stage */
 	double H0;
-	
-	Logger logger = LogManager.getLogger(Flow_2.class);
+
 
 
 	public Flow_2(double discharge,double a, double b, double c, double d, double H0){
@@ -65,8 +60,7 @@ public class Flow_2 implements Model{
 	@Override
 	public double stageValue() {
 		
-		String log4jConfPath = "lib/log4j.properties";
-		PropertyConfigurator.configure(log4jConfPath);
+
 
 		UnivariateFunction f = new UnivariateFunction() {
 			public double value(double x) {
@@ -78,13 +72,11 @@ public class Flow_2 implements Model{
 		double stage=H0;
 		try{
 			UnivariateSolver solver = new BrentSolver();
-			stage = solver.solve(100, f, H0, 20);
+			stage = solver.solve(100, f, -H0, 20);
 
 		} catch (Exception e) {
-			
-			logger.error(e);
-			logger.info("Il solutore numerico non ha trovato una soluzione: h=H0");
 
+			System.out.println("Il solutore numerico non ha trovato una soluzione: h=H0");
 		}
 
 		return stage;

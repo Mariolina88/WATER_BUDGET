@@ -17,7 +17,7 @@ public class TestDam{
 	public void testLinear() throws Exception {
 
 		String startDate = "2014-04-18 00:00";
-		String endDate = "2014-05-03 00:00";
+		String endDate = "2014-08-03 00:00";
 		int timeStepMinutes = 60;
 		String fId = "ID";
 
@@ -31,7 +31,6 @@ public class TestDam{
 
 		
 		OmsTimeSeriesIteratorReader JReader = getTimeseriesReader(inPathToQin, fId, startDate, endDate, timeStepMinutes);
-		OmsTimeSeriesIteratorReader ErogazioniReader = getTimeseriesReader(inPathToErogazioni, fId, startDate, startDate, timeStepMinutes);
 
 		OmsTimeSeriesIteratorWriter writerS = new OmsTimeSeriesIteratorWriter();
 		OmsTimeSeriesIteratorWriter writerQ = new OmsTimeSeriesIteratorWriter();
@@ -70,21 +69,22 @@ public class TestDam{
 			waterBudget.h_sfioro=529.3;
 			waterBudget.mu=0.48;
 			waterBudget.l=20.5;
-			
+			waterBudget.inHMerogazioni=inPathToErogazioni;
+            
 
 			
 			JReader.nextRecord();
-			
+			waterBudget.tCurrent=JReader.tCurrent;
 			HashMap<Integer, double[]> id2ValueMap = JReader.outData;
 			waterBudget.inHMRechargeValues = id2ValueMap;
 			
-            ErogazioniReader.nextRecord();
-            id2ValueMap = ErogazioniReader.outData;
-            waterBudget.inHMerogazioni= id2ValueMap;
+			
 			
 
 
             waterBudget.process();
+            
+
             
             HashMap<Integer, double[]> outHMlevels = waterBudget.outHMLevel;
             
@@ -124,7 +124,6 @@ public class TestDam{
             
 		}
 		JReader.close();
-		ErogazioniReader.close();
 
 
 	}

@@ -24,15 +24,15 @@ import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 
 // TODO: Auto-generated Javadoc
 /**
- * The Class FirstLayer implements the FirstOrderDifferentialEquations interface
+ * The Class  implements the FirstOrderDifferentialEquations interface
  * and solves the water budget equation.
  * @author Marialaura Bancheri
  */
 public class waterBudgetODE implements FirstOrderDifferentialEquations{
 
-	public double a;
+	public double e;
 	
-	public double b;
+	public double f;
 
 	public double recharge;
 	
@@ -46,11 +46,10 @@ public class waterBudgetODE implements FirstOrderDifferentialEquations{
 	 * Instantiates the first layer parameters .
 	 *
 	 * @param recharge: input recharge value
-	 * @param Qmod: the modeled input discharge
 	 */
-	public waterBudgetODE(double recharge, double a, double b, double Smax) {
-		this.a=a;
-		this.b=b;
+	public waterBudgetODE(double recharge, double e, double f, double Smax) {
+		this.e=e;
+		this.f=f;
 		this.recharge=recharge;
 		this.Smax=Smax;
 
@@ -68,7 +67,7 @@ public class waterBudgetODE implements FirstOrderDifferentialEquations{
 	 */
 	public void computeDerivatives(double t, double[] y, double[] yDot)
 			throws MaxCountExceededException, DimensionMismatchException {
-		yDot[0] =recharge-a*Math.pow(y[0]/Smax, b);
+		yDot[0] =recharge-e*Math.pow(y[0]/Smax, f);
 		
 
 	

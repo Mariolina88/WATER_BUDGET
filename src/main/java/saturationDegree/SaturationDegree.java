@@ -35,9 +35,6 @@ import oms3.annotations.Execute;
 import oms3.annotations.In;
 import oms3.annotations.Out;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.jgrasstools.gears.libs.modules.JGTModel;
@@ -58,15 +55,15 @@ public class SaturationDegree extends JGTModel {
 	@In
 	public HashMap<Integer, double[]> inHMStorage;	
 
-	@Description("The masimum storage of the reservoir")
+	@Description("The maximum storage of the reservoir")
 	@In
 	public double Smax_saturation_degree;
 
 	@Description("The raster file with the subbasins")
 	@In
 	public GridCoverage2D inSubbasins;
-
-
+	
+	
 	@Description("The raster file with the saturation degree")
 	@Out
 	public GridCoverage2D outSaturationDataGrid;
@@ -75,13 +72,12 @@ public class SaturationDegree extends JGTModel {
 	int step;
 	WritableRaster SubbasinsMap;
 
-	Logger logger = LogManager.getLogger(SaturationDegree.class);
 
 
 	@Execute
 	public void process() throws Exception {
 
-		try{
+
 			checkNull(inSubbasins);
 
 			// transform the GrifCoverage2D maps into writable rasters
@@ -141,16 +137,8 @@ public class SaturationDegree extends JGTModel {
 					regionMap, inSubbasins.getCoordinateReferenceSystem());
 			step++;
 
-			String log4jConfPath = "lib/log4j.properties";
-			PropertyConfigurator.configure(log4jConfPath);
-			logger.info("Scrittura della mappa del grado di saturazione OK");
 
 
-		} catch (Exception e){
-			logger.error(e);
-			logger.info("Scrittura della mappa del grado di saturazione KO");
-			throw e;
-		}
 
 	}
 

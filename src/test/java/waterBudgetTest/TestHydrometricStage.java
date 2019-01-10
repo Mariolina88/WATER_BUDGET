@@ -17,13 +17,13 @@ public class TestHydrometricStage{
 	@Test
 	public void testLinear() throws Exception {
 
-		String startDate = "2018-02-22 16:00";
-		String endDate = "2018-02-24 03:00";
+		String startDate = "2018-12-20 11:00";
+		String endDate = "2018-12-21 03:00";
 		int timeStepMinutes = 60;
 		String fId = "ID";
 		
 
-		String inPathToDischarge= "resources/Input/Idrogramma_1_Agr.csv";
+		String inPathToDischarge= "resources/Input/Idrogramma_4_Cavone.csv";
 		String pathToStage= "resources/Output/stage/Stage.csv";
 		
 		OmsTimeSeriesIteratorReader QReader = getTimeseriesReader(inPathToDischarge, fId, startDate, endDate, timeStepMinutes);
@@ -46,12 +46,12 @@ public class TestHydrometricStage{
 
 		while( QReader.doProcess ) {
 
-			stage.a=18.037;
-			stage.b=1.8306;
-			stage.c=1.2796;
-			stage.d=0.0769;
-			stage.H0=0.8;
-			stage.model="FRC_Qh";
+			stage.a=9.141;
+			stage.b=1.767;
+			stage.c=0.4696;
+			stage.d=-0.2949;
+			stage.H0=-0.13;
+			stage.model="FRC_VA";
 
 		
 			QReader.nextRecord();

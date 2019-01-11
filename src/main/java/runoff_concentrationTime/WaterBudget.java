@@ -72,7 +72,7 @@ public class WaterBudget{
 
 	@Description("Smax")
 	@In
-	public double s_RunoffMax=10;
+	public double s_RunoffMax=1;
 
 
 	@Description("ODE solver model: dp853, Eulero ")

@@ -63,12 +63,8 @@ public class WaterBudget{
 
 	@Description("Coefficient of the non-linear Reservoir model ")
 	@In
-	public double c ;
+	public double k ;
 
-
-	@Description("Exponent of non-linear reservoir")
-	@In
-	public double d;
 
 	@Description("The area of the HRUs in km2")
 	@In
@@ -76,7 +72,7 @@ public class WaterBudget{
 
 	@Description("Smax")
 	@In
-	public double s_GroundWaterMax=10;
+	public double s_RunoffMax=10;
 
 
 	@Description("ODE solver model: dp853, Eulero ")
@@ -115,7 +111,7 @@ public class WaterBudget{
 		// reading the ID of all the stations 
 		Set<Entry<Integer, double[]>> entrySet = inHMRechargeValues.entrySet();
 
-		double tau_ro=(c*Math.pow(A, 0.5));
+		double tau_ro=(k*Math.pow(A, 0.5));
 
 
 		// iterate over the station
@@ -123,7 +119,7 @@ public class WaterBudget{
 			Integer ID = entry.getKey();
 
 			if(step==0){
-				System.out.println("RO--tau_ro:"+tau_ro+"-d:"+d+"-s_GroundWaterMax:"+s_GroundWaterMax);
+				System.out.println("RO--tau_ro:"+tau_ro+"-s_RunoffMax:"+s_RunoffMax);
 
 				if(initialConditionS_i!=null){
 					CI=initialConditionS_i.get(ID)[0];
@@ -169,10 +165,10 @@ public class WaterBudget{
 
 		
 		/** Creation of the differential equation*/
-		FirstOrderDifferentialEquations ode=new waterBudgetODE(recharge,1/tau_ro,d,s_GroundWaterMax);			
+		FirstOrderDifferentialEquations ode=new waterBudgetODE(recharge,1/tau_ro,1,s_RunoffMax);			
 
 		/** Boundaries conditions*/
-		double[] y = new double[] { S_i, s_GroundWaterMax };
+		double[] y = new double[] { S_i, s_RunoffMax };
 
 		/** Choice of the ODE solver */	
 		SolverODE solver;
@@ -198,7 +194,7 @@ public class WaterBudget{
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public double computeQ(double S_i, double tau_ro) throws IOException {
-		double Q=1/tau_ro*Math.pow(S_i/s_GroundWaterMax,d);
+		double Q=1/tau_ro*Math.pow(S_i/s_RunoffMax,1);
 		return Q;
 	}
 

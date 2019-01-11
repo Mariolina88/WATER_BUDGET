@@ -60,7 +60,7 @@ public class TestRunoff{
 			waterBudget.d=1;
 			waterBudget.timeStep=60;
 			waterBudget.A=5.2092;
-			waterBudget.s_RootZoneMax=1;
+			waterBudget.s_RunoffMax=1;
 			
 
 			

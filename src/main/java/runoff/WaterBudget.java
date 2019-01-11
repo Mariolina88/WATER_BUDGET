@@ -76,7 +76,7 @@ public class WaterBudget{
 
 	@Description("Smax")
 	@In
-	public double s_RootZoneMax=10;
+	public double s_RunoffMax=10;
 
 
 	@Description("ODE solver model: dp853, Eulero ")
@@ -122,7 +122,7 @@ public class WaterBudget{
 			Integer ID = entry.getKey();
 
 			if(step==0){
-				System.out.println("RO--c:"+c+"-d:"+d+"-s_GroundWaterMax:"+s_RootZoneMax);
+				System.out.println("RO--c:"+c+"-d:"+d+"-s_RunoffMax:"+s_RunoffMax);
 
 				if(initialConditionS_i!=null){
 					CI=initialConditionS_i.get(ID)[0];
@@ -168,10 +168,10 @@ public class WaterBudget{
 
 		
 		/** Creation of the differential equation*/
-		FirstOrderDifferentialEquations ode=new waterBudgetODE(recharge,c,d,s_RootZoneMax);			
+		FirstOrderDifferentialEquations ode=new waterBudgetODE(recharge,c,d,s_RunoffMax);			
 
 		/** Boundaries conditions*/
-		double[] y = new double[] { S_i, s_RootZoneMax };
+		double[] y = new double[] { S_i, s_RunoffMax };
 
 		/** Choice of the ODE solver */	
 		SolverODE solver;
@@ -197,7 +197,7 @@ public class WaterBudget{
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public double computeQ(double S_i, double tau_ro) throws IOException {
-		double Q=c*Math.pow(S_i/s_RootZoneMax,d);
+		double Q=c*Math.pow(S_i/s_RunoffMax,d);
 		return Q;
 	}
 

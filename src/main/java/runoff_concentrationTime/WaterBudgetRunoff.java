@@ -44,7 +44,7 @@ import org.apache.commons.math3.ode.*;
  * 
  * @author Marialaura Bancheri
  */
-public class WaterBudget{
+public class WaterBudgetRunoff{
 
 
 	@Description("Input recharge Hashmap")

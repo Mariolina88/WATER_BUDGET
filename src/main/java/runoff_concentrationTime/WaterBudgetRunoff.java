@@ -132,7 +132,6 @@ public class WaterBudgetRunoff{
 			/**Input data reading*/
 			double recharge = inHMRechargeValues.get(ID)[0];
 			if (isNovalue(recharge)) recharge= 0;
-			if(step==0&recharge==0)recharge= 1;
 
 
 			double waterStorage=computeS(recharge,CI,tau_ro);

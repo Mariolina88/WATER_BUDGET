@@ -8,7 +8,7 @@ import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.junit.Test;
 
-import runoff.WaterBudgetRunoff;
+import runoff_concentrationTime.WaterBudgetRunoff;
 
 
 public class TestRunoff{
@@ -56,10 +56,10 @@ public class TestRunoff{
 		while( JReader.doProcess ) {
 		
 			waterBudget.solver_model="dp853";
-			waterBudget.c=0.39;
-			waterBudget.d=1;
+			waterBudget.k=0.49;
+			//waterBudget.d=1;
 			waterBudget.timeStep=60;
-			waterBudget.A=5.2092;
+			waterBudget.A=112.32;
 			waterBudget.s_RunoffMax=1;
 			
 
